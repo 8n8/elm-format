@@ -68,7 +68,11 @@ instance ToConsole InfoMessage where
                     Text.pack $
                     case errs of
                         [] -> inputFile
-                        (A.At (A.Region (A.Position line col) _) _) : _ -> inputFile ++ ":" ++ show line ++ ":" ++ show col
+                        (A.At region _) : _ ->
+                            let
+                                (A.Region (A.Position line col) _) = A.unpackRegion region
+                            in
+                            inputFile ++ ":" ++ show line ++ ":" ++ show col
             in
             "Unable to parse file " <> location <> " To see a detailed explanation, run elm make on the file."
 

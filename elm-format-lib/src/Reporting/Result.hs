@@ -30,7 +30,7 @@ ok value =
 
 throw :: A.Region -> e -> Result w e a
 throw region err =
-  Result [] (Err [A.At region err])
+  Result [] (Err [A.At (A.packRegion region) err])
 
 
 throwMany :: [A.Located e] -> Result w e a
@@ -61,7 +61,7 @@ mapError f (Result warnings rawResult) =
 
 warn :: A.Region -> w -> Result w e ()
 warn region warning =
-  Result [A.At region warning] (Ok ())
+  Result [A.At (A.packRegion region) warning] (Ok ())
 
 
 addWarnings :: [A.Located w] -> Result w e a -> Result w e a

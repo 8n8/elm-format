@@ -13,6 +13,8 @@ module Reporting.Annotation
   , mergeRegions
   , zero
   , one
+  , packRegion
+  , unpackRegion
   )
   where
 
@@ -20,8 +22,9 @@ module Reporting.Annotation
 import Control.Monad (liftM2)
 import Data.Coapplicative
 import Data.Binary (Binary, get, put)
-import Data.Word (Word16)
+import Data.Word (Word16, Word64)
 import Data.String (unwords)
+import Data.Bits ((.&.), shiftR, shiftL)
 
 
 
@@ -29,7 +32,7 @@ import Data.String (unwords)
 
 
 data Located a =
-  At Region a  -- PERF see if unpacking region is helpful
+  At {-# UNPACK #-} !Word64 a  -- PERF see if unpacking region is helpful
   deriving Eq
 
 
@@ -70,7 +73,7 @@ toValue (At _ value) =
 
 merge :: Located a -> Located b -> value -> Located value
 merge (At r1 _) (At r2 _) value =
-  At (mergeRegions r1 r2) value
+  At (packRegion $ mergeRegions (unpackRegion r1) (unpackRegion r2)) value
 
 
 
@@ -86,7 +89,7 @@ data Position =
 
 at :: Position -> Position -> a -> Located a
 at start end a =
-  At (Region start end) a
+  At (packRegion $ Region start end) a
 
 
 
@@ -110,7 +113,26 @@ instance Show Region where
 
 toRegion :: Located a -> Region
 toRegion (At region _) =
-  region
+  unpackRegion region
+
+
+packRegion :: Region -> Word64
+packRegion (Region (Position r1 c1) (Position r2 c2)) =
+    ((fromIntegral r1) `shiftL` (16 * 0)) +
+    ((fromIntegral c1) `shiftL` (16 * 1)) +
+    ((fromIntegral r2) `shiftL` (16 * 2)) +
+    ((fromIntegral c2) `shiftL` (16 * 3))
+
+
+unpackRegion :: Word64 -> Region
+unpackRegion packed =
+    let
+        row1 = fromIntegral ((packed `shiftR` (16 * 3)) .&. 0xFF)
+        col1 = fromIntegral ((packed `shiftR` (16 * 2)) .&. 0xFF)
+        row2 = fromIntegral ((packed `shiftR` (16 * 1)) .&. 0xFF)
+        col2 = fromIntegral ((packed `shiftR` (16 * 0)) .&. 0xFF)
+    in
+        Region (Position row1 col1) (Position row2 col2)
 
 
 mergeRegions :: Region -> Region -> Region

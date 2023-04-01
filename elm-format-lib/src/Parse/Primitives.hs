@@ -279,8 +279,8 @@ addLocation :: Parser x a -> Parser x (A.Located a)
 addLocation (Parser parser) =
   Parser $ \state@(State _ _ _ _ sr sc _) cok eok cerr eerr ->
     let
-      cok' a s@(State _ _ _ _ er ec _) = cok (A.At (A.Region (A.Position sr sc) (A.Position er ec)) a) s
-      eok' a s@(State _ _ _ _ er ec _) = eok (A.At (A.Region (A.Position sr sc) (A.Position er ec)) a) s
+      cok' a s@(State _ _ _ _ er ec _) = cok (A.At (A.packRegion (A.Region (A.Position sr sc) (A.Position er ec))) a) s
+      eok' a s@(State _ _ _ _ er ec _) = eok (A.At (A.packRegion (A.Region (A.Position sr sc) (A.Position er ec))) a) s
     in
     parser state cok' eok' cerr eerr
 

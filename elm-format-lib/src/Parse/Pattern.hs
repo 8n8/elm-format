@@ -138,4 +138,4 @@ expr elmVersion =
             Left pattern ->
               pattern
             Right (region, first, rest, _) ->
-              I.Fix $ A.At region $ ConsPattern first rest
+              I.Fix $ A.At (A.packRegion region) $ ConsPattern first rest
